@@ -18,7 +18,7 @@ function useIndexedDb(databaseName, storeName, method, object) {
 
     request.onupgradeneeded = function (e) {
       const db = request.result;
-      db.createObjectStore(storeName, { keyPath: "_id" });
+      db.createObjectStore(storeName, { keyPath: "_id", autoIncrement: true });
     };
 
     request.onerror = function (e) {
@@ -42,8 +42,8 @@ function useIndexedDb(databaseName, storeName, method, object) {
         };
       } else if (method === "delete") {
         store.delete(object._id);
-
       } else if (method === "add") {
+        console.log(store, object);
         const objRequest = store.add(object);
         objRequest.onsuccess = function (event) {
           console.log("success", event);
@@ -51,25 +51,23 @@ function useIndexedDb(databaseName, storeName, method, object) {
         objRequest.onerror = function (event) {
           console.log("error", event);
         }
-      } 
-
+      }
       tx.oncomplete = function () {
         db.close();
       };
     };
   });
-};
+}
 
 function saveRecord(transaction) {
   if (checkForIndexedDb()) {
-    useIndexedDb("budget", "pending", "add", transaction)
-      .then(
-        () => {
-          console.log("added to DB");
-        }
-      );
-  };
-};
+    useIndexedDb("budget", "pending", "add", transaction).then(
+      () => {
+        console.log("added to DB");
+      }
+    );
+  }
+}
 
 fetch("/api/transaction")
   .then(response => {
@@ -214,13 +212,10 @@ function sendTransaction(isAdding) {
     });
 }
 
-
-
 document.querySelector("#add-btn").onclick = function () {
   sendTransaction(true);
 };
 
 document.querySelector("#sub-btn").onclick = function () {
-
   sendTransaction(false);
 };
